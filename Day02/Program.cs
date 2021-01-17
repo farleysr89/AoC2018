@@ -64,7 +64,31 @@ namespace Day02
         {
             var input = File.ReadAllText("Input.txt");
             var data = input.Split('\n').ToList();
-            Console.WriteLine("");
+            var first = "";
+            var index = 0;
+            foreach (var s in data.Where(s => s != ""))
+            {
+                foreach (var ss in data.GetRange(data.IndexOf(s), data.Count - data.IndexOf(s)).Where(sss => sss != ""))
+                {
+                    var difCount = 0;
+                    for (var i = 0; i < s.Length; i++)
+                    {
+                        if (s[i] != ss[i])
+                        {
+                            index = i;
+                            difCount++;
+                        }
+                        if (difCount > 1) break;
+                    }
+
+                    if (difCount != 1) continue;
+                    first = s;
+                    break;
+                }
+
+                if (first != "") break;
+            }
+            Console.WriteLine("Common letters are  " + first[0..index] + first[(index + 1)..]);
         }
     }
 }
