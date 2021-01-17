@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -24,7 +25,22 @@ namespace Day01
         {
             var input = File.ReadAllText("Input.txt");
             var data = input.Split('\n').ToList();
-            Console.WriteLine("");
+            var visited = new HashSet<int> { 0 };
+            var frequency = 0;
+            while (true)
+            {
+                foreach (var s in data.Where(s => s != ""))
+                {
+                    frequency += int.Parse(s);
+                    if (visited.Contains(frequency))
+                    {
+                        Console.WriteLine("Final frequency is " + frequency);
+                        return;
+                    }
+
+                    visited.Add(frequency);
+                }
+            }
         }
     }
 }
