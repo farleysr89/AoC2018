@@ -124,10 +124,9 @@ namespace Day03
             }
 
             index = 0;
-            var found = false;
             foreach (var s in data.Where(s => s != ""))
             {
-                found = true;
+                var found = true;
                 index++;
                 var parts = s.Split(" @ ");
                 parts = parts[1].Split(": ");
