@@ -63,7 +63,31 @@ namespace Day06
         {
             var input = File.ReadAllText("Input.txt");
             var data = input.Split('\n').ToList();
-            Console.WriteLine("");
+            var coordinates = new List<Coordinate>();
+            var id = 'A';
+            foreach (var s in data.Where(s => s != ""))
+            {
+                var parts = s.Split(",").Select(int.Parse).ToList();
+                coordinates.Add(new Coordinate { X = parts[0], Y = parts[1], Id = id });
+                if (id == 'Z') id = 'a';
+                else id++;
+            }
+            var minX = coordinates.Min(c => c.X);
+            var minY = coordinates.Min(c => c.Y);
+            coordinates.ForEach(c => c.X -= minX);
+            coordinates.ForEach(c => c.Y -= minY);
+            var maxX = coordinates.Max(c => c.X);
+            var maxY = coordinates.Max(c => c.Y);
+
+            var locationCount = 0;
+            for (var y = 0; y <= maxY; y++)
+            {
+                for (var x = 0; x <= maxX; x++)
+                {
+                    if (coordinates.Sum(c => c.Distance(x, y)) < 10000) locationCount++;
+                }
+            }
+            Console.WriteLine("Location Count = " + locationCount);
         }
     }
     internal class Coordinate
