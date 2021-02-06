@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -14,8 +15,26 @@ namespace Day13
 
         private static void SolvePart1()
         {
+            char[] carts = { '>', '<', '^', 'v' };
             var input = File.ReadAllText("Input.txt");
             var data = input.Split('\n').ToList();
+            var map = new List<string>();
+            var x = 0;
+            var y = 0;
+            var mineCarts = new List<MineCart>();
+            foreach (var s in data)
+            {
+                x = 0;
+                foreach (var c in s)
+                {
+                    if (carts.Contains(c))
+                    {
+                        mineCarts.Add(new MineCart { CurrDir = (MineCart.Dir)c, NextTurn = MineCart.Turn.Left, X = x, Y = y });
+                    }
+                    x++;
+                }
+                y++;
+            }
             Console.WriteLine("");
         }
 
@@ -36,10 +55,18 @@ namespace Day13
 
         internal enum Dir
         {
-            North = 0,
-            East = 1,
-            South = 2,
-            West = 3
+            North = '^',
+            East = '>',
+            South = 'v',
+            West = '<'
+        }
+
+        internal enum DirSymbol
+        {
+            North = '^',
+            East = '>',
+            South = 'v',
+            West = '<'
         }
 
         internal enum Turn
