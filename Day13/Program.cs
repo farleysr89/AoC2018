@@ -19,13 +19,12 @@ namespace Day13
             var input = File.ReadAllText("Input.txt");
             var data = input.Split('\n').ToList();
             var map = new List<string>();
-            var x = 0;
             var y = 0;
             var mineCarts = new List<MineCart>();
             var i = 0;
             foreach (var s in data)
             {
-                x = 0;
+                var x = 0;
                 var line = "";
                 foreach (var c in s)
                 {
@@ -56,7 +55,6 @@ namespace Day13
                 y++;
             }
 
-            var turns = 0;
             while (true)
             {
                 mineCarts.OrderBy(mc => mc.Y).ThenBy(mcc => mcc.X);
@@ -68,12 +66,10 @@ namespace Day13
                 }
                 if (DetectCollision(mineCarts))
                     break;
-
-                turns++;
             }
 
-            var loc = CollisionLocation(mineCarts);
-            Console.WriteLine("Collision Location = " + loc.Item1 + "," + loc.Item2);
+            var (item1, item2) = CollisionLocation(mineCarts);
+            Console.WriteLine("Collision Location = " + item1 + "," + item2);
         }
 
         internal static bool DetectCollision(List<MineCart> mineCarts)
@@ -87,9 +83,63 @@ namespace Day13
 
         private static void SolvePart2()
         {
+            char[] carts = { '>', '<', '^', 'v' };
             var input = File.ReadAllText("Input.txt");
             var data = input.Split('\n').ToList();
-            Console.WriteLine("");
+            var map = new List<string>();
+            var y = 0;
+            var mineCarts = new List<MineCart>();
+            var i = 0;
+            foreach (var s in data)
+            {
+                var x = 0;
+                var line = "";
+                foreach (var c in s)
+                {
+                    if (carts.Contains(c))
+                    {
+                        mineCarts.Add(new MineCart
+                        { CurrDir = (MineCart.Dir)c, NextTurn = MineCart.Turn.Left, X = x, Y = y, Id = i });
+                        i++;
+                        switch (c)
+                        {
+                            case '^':
+                            case 'v':
+                                line += '|';
+                                break;
+                            case '<':
+                            case '>':
+                                line += '-';
+                                break;
+                            default:
+                                Console.WriteLine("Something Broke!");
+                                break;
+                        }
+                    }
+                    else line += c;
+                    x++;
+                }
+                map.Add(line);
+                y++;
+            }
+
+            while (mineCarts.Count > 1)
+            {
+                mineCarts.OrderBy(mc => mc.Y).ThenBy(mcc => mcc.X);
+                var tmpCarts = new List<MineCart>(mineCarts);
+                foreach (var mc in mineCarts)
+                {
+                    mc.Move(map);
+                    if (!DetectCollision(mineCarts)) continue;
+                    var (cx, cy) = CollisionLocation(mineCarts);
+                    tmpCarts.RemoveAll(mcc => mcc.X == cx && mcc.Y == cy);
+                }
+
+                mineCarts = new List<MineCart>(tmpCarts);
+            }
+
+            var (item1, item2) = mineCarts.First().Location;
+            Console.WriteLine("Last mine cart Location = " + item1 + "," + item2);
         }
     }
 
@@ -131,107 +181,143 @@ namespace Day13
             {
                 case Dir.East:
                     X++;
-                    if (map[Y][X] == '/')
-                        CurrDir = Dir.North;
-                    else if (map[Y][X] == '\\')
-                        CurrDir = Dir.South;
-                    else if (map[Y][X] == '+')
+                    switch (map[Y][X])
                     {
-                        if (NextTurn == Turn.Left)
-                        {
+                        case '/':
+                            CurrDir = Dir.North;
+                            break;
+                        case '\\':
+                            CurrDir = Dir.South;
+                            break;
+                        case '+' when NextTurn == Turn.Left:
                             CurrDir = Dir.North;
                             NextTurn = Turn.Straight;
-                        }
-                        else if (NextTurn == Turn.Straight)
-                        {
+                            break;
+                        case '+' when NextTurn == Turn.Straight:
                             NextTurn = Turn.Right;
-                        }
-                        else if (NextTurn == Turn.Right)
-                        {
-                            CurrDir = Dir.South;
-                            NextTurn = Turn.Left;
-                        }
+                            break;
+                        case '+':
+                            {
+                                if (NextTurn == Turn.Right)
+                                {
+                                    CurrDir = Dir.South;
+                                    NextTurn = Turn.Left;
+                                }
+
+                                break;
+                            }
+                        default:
+                            {
+                                if (map[Y][X] != '-')
+                                    Console.WriteLine("Something Broke!");
+                                break;
+                            }
                     }
-                    else if (map[Y][X] != '-')
-                        Console.WriteLine("Something Broke!");
                     break;
                 case Dir.West:
                     X--;
-                    if (map[Y][X] == '/')
-                        CurrDir = Dir.South;
-                    else if (map[Y][X] == '\\')
-                        CurrDir = Dir.North;
-                    else if (map[Y][X] == '+')
+                    switch (map[Y][X])
                     {
-                        if (NextTurn == Turn.Left)
-                        {
+                        case '/':
+                            CurrDir = Dir.South;
+                            break;
+                        case '\\':
+                            CurrDir = Dir.North;
+                            break;
+                        case '+' when NextTurn == Turn.Left:
                             CurrDir = Dir.South;
                             NextTurn = Turn.Straight;
-                        }
-                        else if (NextTurn == Turn.Straight)
-                        {
+                            break;
+                        case '+' when NextTurn == Turn.Straight:
                             NextTurn = Turn.Right;
-                        }
-                        else if (NextTurn == Turn.Right)
-                        {
-                            CurrDir = Dir.North;
-                            NextTurn = Turn.Left;
-                        }
+                            break;
+                        case '+':
+                            {
+                                if (NextTurn == Turn.Right)
+                                {
+                                    CurrDir = Dir.North;
+                                    NextTurn = Turn.Left;
+                                }
+
+                                break;
+                            }
+                        default:
+                            {
+                                if (map[Y][X] != '-')
+                                    Console.WriteLine("Something Broke!");
+                                break;
+                            }
                     }
-                    else if (map[Y][X] != '-')
-                        Console.WriteLine("Something Broke!");
                     break;
                 case Dir.North:
                     Y--;
-                    if (map[Y][X] == '/')
-                        CurrDir = Dir.East;
-                    else if (map[Y][X] == '\\')
-                        CurrDir = Dir.West;
-                    else if (map[Y][X] == '+')
+                    switch (map[Y][X])
                     {
-                        if (NextTurn == Turn.Left)
-                        {
+                        case '/':
+                            CurrDir = Dir.East;
+                            break;
+                        case '\\':
+                            CurrDir = Dir.West;
+                            break;
+                        case '+' when NextTurn == Turn.Left:
                             CurrDir = Dir.West;
                             NextTurn = Turn.Straight;
-                        }
-                        else if (NextTurn == Turn.Straight)
-                        {
+                            break;
+                        case '+' when NextTurn == Turn.Straight:
                             NextTurn = Turn.Right;
-                        }
-                        else if (NextTurn == Turn.Right)
-                        {
-                            CurrDir = Dir.East;
-                            NextTurn = Turn.Left;
-                        }
+                            break;
+                        case '+':
+                            {
+                                if (NextTurn == Turn.Right)
+                                {
+                                    CurrDir = Dir.East;
+                                    NextTurn = Turn.Left;
+                                }
+
+                                break;
+                            }
+                        default:
+                            {
+                                if (map[Y][X] != '|')
+                                    Console.WriteLine("Something Broke!");
+                                break;
+                            }
                     }
-                    else if (map[Y][X] != '|')
-                        Console.WriteLine("Something Broke!");
                     break;
                 case Dir.South:
                     Y++;
-                    if (map[Y][X] == '/')
-                        CurrDir = Dir.West;
-                    else if (map[Y][X] == '\\')
-                        CurrDir = Dir.East;
-                    else if (map[Y][X] == '+')
+                    switch (map[Y][X])
                     {
-                        if (NextTurn == Turn.Left)
-                        {
+                        case '/':
+                            CurrDir = Dir.West;
+                            break;
+                        case '\\':
+                            CurrDir = Dir.East;
+                            break;
+                        case '+' when NextTurn == Turn.Left:
                             CurrDir = Dir.East;
                             NextTurn = Turn.Straight;
-                        }
-                        else if (NextTurn == Turn.Straight)
-                        {
+                            break;
+                        case '+' when NextTurn == Turn.Straight:
                             NextTurn = Turn.Right;
-                        }
-                        else if (NextTurn == Turn.Right)
-                        {
-                            CurrDir = Dir.West;
-                            NextTurn = Turn.Left;
-                        }
+                            break;
+                        case '+':
+                            {
+                                if (NextTurn == Turn.Right)
+                                {
+                                    CurrDir = Dir.West;
+                                    NextTurn = Turn.Left;
+                                }
+
+                                break;
+                            }
+                        default:
+                            {
+                                if (map[Y][X] != '|')
+                                    Console.WriteLine("Something Broke!");
+                                break;
+                            }
                     }
-                    else if (map[Y][X] != '|')
-                        Console.WriteLine("Something Broke!");
                     break;
                 default:
                     Console.WriteLine("Something Broke!");
