@@ -26,4 +26,27 @@ namespace Day13
             Console.WriteLine("");
         }
     }
+
+    internal class MineCart
+    {
+        internal int X;
+        internal int Y;
+        internal Dir CurrDir;
+        internal Turn NextTurn;
+
+        internal enum Dir
+        {
+            North = 0,
+            East = 1,
+            South = 2,
+            West = 3
+        }
+
+        internal enum Turn
+        {
+            Left = 0,
+            Straight = 1,
+            Right = 2
+        }
+    }
 }
