@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 namespace Day11
 {
@@ -17,14 +16,12 @@ namespace Day11
         {
             var input = File.ReadAllText("Input.txt");
             var data = int.Parse(input);
-            //data = 18;
             const int minX = 1;
             const int minY = 1;
             const int maxX = 300;
             const int maxY = 300;
-            var maxPower = int.MinValue;
-            var index = (0, 0);
-            var nodes = new Dictionary<(int, int), int>();
+            var maxPower = long.MinValue;
+            var nodes = new Dictionary<(int, int), long>();
             for (var y = minY; y <= maxY; y++)
             {
                 for (var x = minX; x <= maxX; x++)
@@ -32,21 +29,28 @@ namespace Day11
                     nodes.Add((x, y), Power(x, y, data));
                 }
             }
-            for (var x = minX; x <= maxX - 2; x++)
+
+            var processed = PreProcess(nodes);
+            int bx = 0, by = 0;
+
+            const int s = 3;
+            for (var y = s; y <= 300; y++)
             {
-                for (var y = minY; y <= maxY - 2; y++)
+                for (var x = s; x <= 300; x++)
                 {
-                    var power = nodes.Where(n =>
-                            n.Key.Item1 >= x && n.Key.Item1 <= x + 2 && n.Key.Item2 >= y && n.Key.Item2 <= y + 2)
-                        .Sum(n => n.Value);
-                    if (power <= maxPower) continue;
-                    maxPower = power;
-                    index = (x, y);
+                    var total = processed[(x, y)];
+                    if (y - s > 0) total -= processed[(x, y - s)];
+                    if (x - s > 0) total -= processed[(x - s, y)];
+                    if (x - s > 0 && y - s > 0) total += processed[(x - s, y - s)];
+                    if (total <= maxPower) continue;
+                    maxPower = total;
+                    bx = x - s + 1;
+                    by = y - s + 1;
                 }
             }
+
             Console.WriteLine("Maximum power = " + maxPower);
-            Console.WriteLine("Index = " + index.Item1 + " " + index.Item2);
-            //Console.Write(nodes.Where(n => n.Key.Item1 >= 33 && n.Key.Item1 <= 33 + 2 && n.Key.Item2 >= 45 && n.Key.Item2 <= 45 + 2).Sum(n => n.Value));
+            Console.WriteLine(bx + "," + by);
         }
 
         internal static int Power(int x, int y, int grid)
@@ -65,11 +69,67 @@ namespace Day11
             return power;
         }
 
+        // Code from here: https://www.geeksforgeeks.org/submatrix-sum-queries/
+        internal static Dictionary<(int, int), long> PreProcess(Dictionary<(int, int), long> orig)
+        {
+            var aux = new Dictionary<(int, int), long>();
+            // Copy first row of mat[][] to aux[][] 
+            for (var i = 1; i <= 300; i++)
+                aux[(1, i)] = orig[(1, i)];
+
+            // Do column wise sum 
+            for (var i = 2; i <= 300; i++)
+                for (var j = 1; j <= 300; j++)
+                    aux[(i, j)] = orig[(i, j)] + aux[(i - 1, j)];
+
+            // Do row wise sum 
+            for (var i = 1; i <= 300; i++)
+                for (var j = 2; j <= 300; j++)
+                    aux[(i, j)] += aux[(i, j - 1)];
+
+            return aux;
+        }
         private static void SolvePart2()
         {
             var input = File.ReadAllText("Input.txt");
-            var data = input.Split('\n').ToList();
-            Console.WriteLine("");
+            var data = int.Parse(input);
+            const int minX = 1;
+            const int minY = 1;
+            const int maxX = 300;
+            const int maxY = 300;
+            var maxPower = long.MinValue;
+            var nodes = new Dictionary<(int, int), long>();
+            for (var y = minY; y <= maxY; y++)
+            {
+                for (var x = minX; x <= maxX; x++)
+                {
+                    nodes.Add((x, y), Power(x, y, data));
+                }
+            }
+
+            var processed = PreProcess(nodes);
+            int bx = 0, by = 0, bs = 0;
+
+            for (var s = 1; s <= 300; s++)
+            {
+                for (var y = s; y <= 300; y++)
+                {
+                    for (var x = s; x <= 300; x++)
+                    {
+                        var total = processed[(x, y)];
+                        if (y - s > 0) total -= processed[(x, y - s)];
+                        if (x - s > 0) total -= processed[(x - s, y)];
+                        if (x - s > 0 && y - s > 0) total += processed[(x - s, y - s)];
+                        if (total <= maxPower) continue;
+                        maxPower = total;
+                        bx = x - s + 1;
+                        by = y - s + 1;
+                        bs = s;
+                    }
+                }
+            }
+            Console.WriteLine("Maximum power = " + maxPower);
+            Console.WriteLine(bx + "," + by + "," + bs);
         }
     }
 }
