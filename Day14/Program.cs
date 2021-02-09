@@ -44,25 +44,49 @@ namespace Day14
             var input = File.ReadAllText("Input.txt");
             var first = 0;
             var second = 1;
-            var recipes = "37";
+            var recipes = new List<int> { 3, 7 };
             var num = input;
-            while (recipes.Length < 20 || !recipes[^10..].Contains(num))
+            while (true)
             {
-                var sum = (int.Parse(recipes[first].ToString()) + int.Parse(recipes[second].ToString()));
-                recipes += sum;
-                first += (1 + int.Parse(recipes[first].ToString()));
-                first %= recipes.Length;
-                second += (1 + int.Parse(recipes[second].ToString()));
-                second %= recipes.Length;
+                var sum = (recipes[first] + recipes[second]).ToString();
+                recipes.AddRange(sum.Select(c => int.Parse(c.ToString())));
+                first += (1 + recipes[first]);
+                first %= recipes.Count;
+                second += (1 + recipes[second]);
+                second %= recipes.Count;
+                var val = Check(recipes.TakeLast(7).ToList(), num);
+                if (val == -1) continue;
+                val += recipes.Count - 7;
+                Console.Write(val);
+                break;
+
+            }
+        }
+
+        internal static int Check(List<int> recipes, string num)
+        {
+            var found = false;
+            var lastI = 0;
+            for (var i = 0; i < recipes.Count - num.Length; i++)
+            {
+                lastI = i;
+                var h = i;
+                found = true;
+                foreach (var c in num)
+                {
+                    if (recipes[h] != int.Parse(c.ToString()))
+                    {
+                        found = false;
+                        break;
+                    }
+
+                    h++;
+                }
+
+                if (found) break;
             }
 
-            //var output = "";
-
-            //for (var i = num; i < num + 10; i++)
-            //{
-            //    output += recipes[i];
-            //}
-            Console.WriteLine("Result = " + (recipes.Length - 5));
+            return found ? lastI : -1;
         }
     }
 }
