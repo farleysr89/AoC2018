@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.VisualBasic.CompilerServices;
 
 namespace Day15
 {
@@ -51,9 +52,11 @@ namespace Day15
                 rounds++;
                 foreach (var f in sortedFighters)
                 {
-                    var (item1, item2) = FindMove(f, data, sortedFighters);
-                    f.X = item1;
-                    f.Y = item2;
+                    var cells = GetDistances(f, data, fighters);
+                    var dest = FindMove(f, fighters, cells.ToList());
+                    // var (item1, item2) = FindMove(f, data, sortedFighters);
+                    // f.X = item1;
+                    // f.Y = item2;
                 }
             }
 
@@ -73,20 +76,32 @@ namespace Day15
             return !fighters.Any(ff => ff.X == destX && ff.Y == destY);
         }
 
-        private static (int,int) FindMove(Fighter f, IReadOnlyList<string> map, IEnumerable<Fighter> fighters)
+        private static Cell FindMove(Fighter f, IEnumerable<Fighter> fighters, IReadOnlyCollection<Cell> cells)
         {
             var opponents = fighters.Where(ff => f.IsElf ? !ff.IsElf : ff.IsElf);
-            var closestOpponents = opponents.OrderBy(o => GetDistance(f, o)).ThenBy(o => o.Y).ThenBy(o => o.X);
-            return (0, 0);
+            var closestOpponents = opponents.Select(o => GetDistance(o, cells)).OrderBy(c => c.Distance).ThenBy(c => c.Y).ThenBy(c => c.X);
+            return closestOpponents.First();
 
         }
 
-        private static int GetDistance(Fighter f, Fighter ff, IReadOnlyList<string> map = null, IEnumerable<Fighter> fighters = null)
+        private static Cell GetDistance(Fighter f,  IReadOnlyCollection<Cell> cells)
         {
-            return Math.Abs(f.X - ff.X) + Math.Abs(f.Y - ff.Y);
+            var moves = new List<(int,int)>{ (0, -1), (-1, 0), (1, 0), (0, 1) };
+            var distance = int.MaxValue;
+            Cell returnC = null;
+            foreach (var m in moves)
+            {
+                var x = f.X + m.Item1;
+                var y = f.Y + m.Item2;
+                var c = cells.FirstOrDefault(cc => cc.X == x && cc.Y == y);
+                if (c == null || c.Distance >= distance) continue;
+                distance = c.Distance;
+                returnC = c;
+            }
+            return returnC;
         }        
         
-        private static int GetDistances(Fighter f, IReadOnlyList<string> map = null, IEnumerable<Fighter> fighters = null)
+        private static IEnumerable<Cell> GetDistances(Fighter f, IReadOnlyList<string> map, IEnumerable<Fighter> fighters)
         {
             var cells = new List<Cell>();
             var moves = new List<(int,int)>{ (0, -1), (-1, 0), (1, 0), (0, 1) };
@@ -98,16 +113,47 @@ namespace Day15
                 Y = f.Y
             });
             cells.AddRange(from m in moves let x = f.X + m.Item1 let y = f.Y + m.Item2 where CanMove(x, y, map, fighters) select new Cell { Distance = distance, X = x, Y = y });
+            while (true)
+            {
+                distance++;
+                var count = 0;
+                var tempCells = cells.Select(c => new Cell
+                {
+                    X = c.X,
+                    Y = c.Y,
+                    Distance = distance
+                }).ToList();
+                foreach (var c in tempCells)
+                {
+                    foreach (var (item1, item2) in moves)
+                    {
+                        var x = c.X + item1;
+                        var y = c.Y + item2;
+                        var cc = cells.FirstOrDefault(ccc => ccc.X == x && ccc.Y == y);
+                        if (cc != null && cc.Distance <= distance || !CanMove(x, y, map, fighters))
+                        {
+                            continue;
+                        }
+
+                        count++;
+
+                        if (cc == null)
+                            cells.Add(new Cell
+                            {
+                                X = x,
+                                Y = y,
+                                Distance = distance
+                            });
+                        else
+                            cc.Distance = distance;
+                    }
+                }
+
+                if (count == 0) break;
+            }
             
-            
-            return 0;
+            return cells;
         }
-        
-        private static int GetDistance(Fighter f, int destX, int destY, IReadOnlyList<string> map = null, IEnumerable<Fighter> fighters = null)
-        {
-            
-            return 0;
-        }    
     }
 
     internal class Fighter
