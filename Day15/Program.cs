@@ -27,6 +27,7 @@ namespace Day15
                     "#G..G..G#\n" +
                     "#########\n").Split('\n').ToList();
             var y = 0;
+            var id = 0;
             var fighters = new List<Fighter>();
             foreach (var l in data)
             {
@@ -34,12 +35,16 @@ namespace Day15
                 foreach (var c in l)
                 {
                     if (c == 'E' || c == 'G')
+                    {
                         fighters.Add(new Fighter
                         {
+                            Id = id,
                             X = x,
                             Y = y,
                             IsElf = c == 'E'
                         });
+                        id++;
+                    }
                     x++;
                 }
                 y++;
@@ -51,8 +56,25 @@ namespace Day15
                 rounds++;
                 foreach (var f in sortedFighters)
                 {
-                    var cells = GetDistances(f, data, fighters);
-                    var dest = FindMove(f, fighters, cells.ToList());
+                    if (fighters.Where(ff => f.IsElf ? !ff.IsElf : ff.IsElf).Any(ff => LegalFight(f, ff)))
+                    {
+                        
+                    }
+                    else
+                    {
+                        var cells = GetDistances(f, data, fighters).ToList();
+                        var dest = FindMove(f, fighters, cells);
+                        if (dest == null) continue;
+                        var move = FindPath(dest, cells);
+                        fighters.First(ff => ff.Id == f.Id).X = move.X;
+                        fighters.First(ff => ff.Id == f.Id).Y = move.Y;
+
+
+                        if (fighters.Where(ff => f.IsElf ? !ff.IsElf : ff.IsElf).Any(ff => LegalFight(f, ff)))
+                        {
+
+                        }
+                    }
                     // var (item1, item2) = FindMove(f, data, sortedFighters);
                     // f.X = item1;
                     // f.Y = item2;
@@ -78,9 +100,8 @@ namespace Day15
         private static Cell FindMove(Fighter f, IEnumerable<Fighter> fighters, IReadOnlyCollection<Cell> cells)
         {
             var opponents = fighters.Where(ff => f.IsElf ? !ff.IsElf : ff.IsElf);
-            var closestOpponents = opponents.Select(o => GetDistance(o, cells)).OrderBy(c => c.Distance).ThenBy(c => c.Y).ThenBy(c => c.X);
-            return closestOpponents.First();
-
+            var closestOpponents = opponents.Select(o => GetDistance(o, cells));
+            return !closestOpponents.Any(c => c != null) ? null : closestOpponents.OrderBy(c => c.Distance).ThenBy(c => c.Y).ThenBy(c => c.X).First();
         }
 
         private static Cell GetDistance(Fighter f,  IReadOnlyCollection<Cell> cells)
@@ -153,10 +174,35 @@ namespace Day15
             
             return cells;
         }
+
+        private static Cell FindPath(Cell c, IReadOnlyCollection<Cell> cells)
+        {
+            var moves = new List<(int,int)>{ (0, -1), (-1, 0), (1, 0), (0, 1) };
+            var distance = c.Distance;
+            while (distance > 1)
+            {
+                distance--;
+                c = cells.Where(cc => cc.Distance == distance && LegalMove(c, cc)).OrderBy(cc=> cc.Y).ThenBy(cc => cc.X).First();
+                
+            }
+            return c;
+        }
+
+        private static bool LegalMove(Cell c, Cell cc)
+        {
+            var moves = new List<(int,int)>{ (0, -1), (-1, 0), (1, 0), (0, 1) };
+            return (from m in moves let x = c.X + m.Item1 let y = c.Y + m.Item2 where x == cc.X && y == cc.Y select x).Any();
+        }
+        private static bool LegalFight(Fighter f, Fighter ff)
+        {
+            var moves = new List<(int,int)>{ (0, -1), (-1, 0), (1, 0), (0, 1) };
+            return (from m in moves let x = f.X + m.Item1 let y = f.Y + m.Item2 where x == ff.X && y == ff.Y select x).Any();
+        }
     }
 
     internal class Fighter
     {
+        internal int Id;
         internal int X;
         internal int Y;
         internal bool IsElf;
