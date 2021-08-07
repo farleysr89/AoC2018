@@ -17,15 +17,13 @@ namespace Day15
         {
             var input = File.ReadAllText("Input.txt");
             var data = input.Split('\n').ToList();
-            data = ("#########\n" +
-                    "#G..G..G#\n" +
-                    "#.......#\n" +
-                    "#.......#\n" +
-                    "#G..E..G#\n" +
-                    "#.......#\n" +
-                    "#.......#\n" +
-                    "#G..G..G#\n" +
-                    "#########\n").Split('\n').ToList();
+            data = ("#######\n" +
+                    "#.G...#\n" +
+                    "#...EG#\n" +
+                    "#.#.#G#\n" +
+                    "#..G#E#\n" +
+                    "#.....#\n" +
+                    "#######\n").Split('\n').ToList();
             var y = 0;
             var id = 0;
             var fighters = new List<Fighter>();
@@ -75,9 +73,6 @@ namespace Day15
 
                         }
                     }
-                    // var (item1, item2) = FindMove(f, data, sortedFighters);
-                    // f.X = item1;
-                    // f.Y = item2;
                 }
             }
 
@@ -177,7 +172,6 @@ namespace Day15
 
         private static Cell FindPath(Cell c, IReadOnlyCollection<Cell> cells)
         {
-            var moves = new List<(int,int)>{ (0, -1), (-1, 0), (1, 0), (0, 1) };
             var distance = c.Distance;
             while (distance > 1)
             {
