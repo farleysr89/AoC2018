@@ -116,8 +116,7 @@ namespace Day15
                         }
                         else
                         {
-                            closeOpponents.OrderBy(o => o.Y).ThenBy(o => o.X);
-                            var opponent = closeOpponents.First();
+                            var opponent = closeOpponents.OrderBy(o => o.Y).ThenBy(o => o.X).First();
                             fighters.First(ff => ff.Id == opponent.Id).Health -= f.Damage;
                             fighters.RemoveAll(ff => ff.Health <= 0);
                         }
@@ -144,8 +143,7 @@ namespace Day15
                             }
                             else
                             {
-                                closeOpponents.OrderBy(o => o.Y).ThenBy(o => o.X);
-                                var opponent = closeOpponents.First();
+                                var opponent = closeOpponents.OrderBy(o => o.Y).ThenBy(o => o.X).First();
                                 fighters.First(ff => ff.Id == opponent.Id).Health -= f.Damage;
                                 fighters.RemoveAll(ff => ff.Health <= 0);
                             }
@@ -157,10 +155,7 @@ namespace Day15
                 rounds++;
                 sortedFighters = fighters.OrderBy(f => f.Y).ThenBy(f => f.X).ToList();
             }
-
-            // 195339 is too high
-            // 195960 is too high
-            // 193120 is too high
+            
             Console.WriteLine("Final result = " + (rounds * fighters.Sum(f => f.Health)));
         }
 
@@ -179,8 +174,8 @@ namespace Day15
 
         private static Cell FindMove(Fighter f, IEnumerable<Fighter> fighters, IReadOnlyCollection<Cell> cells)
         {
-            var opponents = fighters.Where(ff => f.IsElf ? !ff.IsElf : ff.IsElf);
-            var closestOpponents = opponents.Select(o => GetDistance(o, cells));
+            var opponents = fighters.Where(ff => f.IsElf ? !ff.IsElf : ff.IsElf).ToList();
+            var closestOpponents = opponents.Select(o => GetDistance(o, cells)).ToList();
             return !closestOpponents.Any(c => c != null) ? null : closestOpponents.Where(c => c != null).OrderBy(c => c.Distance).ThenBy(c => c.Y).ThenBy(c => c.X).First();
         }
 
