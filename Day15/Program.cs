@@ -17,13 +17,14 @@ namespace Day15
         {
             var input = File.ReadAllText("Input.txt");
             var data = input.Split('\n').ToList();
-            data = ("#######\n" +
-                    "#.G...#\n" +
-                    "#...EG#\n" +
-                    "#.#.#G#\n" +
-                    "#..G#E#\n" +
-                    "#.....#\n" +
-                    "#######\n").Split('\n').ToList();
+            data = ("#########\n" +
+                    "#G......#\n" +
+                    "#.E.#...#\n" +
+                    "#..##..G#\n" +
+                    "#...##..#\n" +
+                    "#...#...#\n" +
+                    "#.G...G.#\n" +
+                    "#########\n").Split('\n').ToList();
             var y = 0;
             var id = 0;
             var fighters = new List<Fighter>();
@@ -47,16 +48,32 @@ namespace Day15
                 }
                 y++;
             }
-            var sortedFighters = fighters.OrderBy(f => f.Y).ThenBy(f => f.X);
-            var rounds = 0;
-            while (!sortedFighters.All(f => f.IsElf) || !sortedFighters.All(f => !f.IsElf))
+            var sortedFighters = fighters.OrderBy(f => f.Y).ThenBy(f => f.X).ToList();
+            var rounds = -1;
+            while (fighters.Any(f => f.IsElf) && fighters.Any(f => !f.IsElf))
             {
                 rounds++;
                 foreach (var f in sortedFighters)
                 {
+                    if(!(fighters.Any(ff => ff.IsElf) && fighters.Any(ff => !ff.IsElf))) break;
                     if (fighters.Where(ff => f.IsElf ? !ff.IsElf : ff.IsElf).Any(ff => LegalFight(f, ff)))
                     {
-                        
+                        var closeOpponents = fighters.Where(ff => f.IsElf ? !ff.IsElf : ff.IsElf).Where(ff => LegalFight(f, ff)).ToList();
+                        var min = closeOpponents.Min(oo => oo.Health);
+                        closeOpponents = closeOpponents.Where(o => o.Health == min).ToList();
+                        if (closeOpponents.Count() == 1)
+                        {
+                            var opponent = closeOpponents.First();
+                            fighters.First(ff => ff.Id == opponent.Id).Health -= f.Damage;
+                            fighters.RemoveAll(ff => ff.Health <= 0);
+                        }
+                        else
+                        {
+                            closeOpponents.OrderBy(o => o.Y).ThenBy(o => o.X);
+                            var opponent = closeOpponents.First();
+                            fighters.First(ff => ff.Id == opponent.Id).Health -= f.Damage;
+                            fighters.RemoveAll(ff => ff.Health <= 0);
+                        }
                     }
                     else
                     {
@@ -66,17 +83,33 @@ namespace Day15
                         var move = FindPath(dest, cells);
                         fighters.First(ff => ff.Id == f.Id).X = move.X;
                         fighters.First(ff => ff.Id == f.Id).Y = move.Y;
-
-
+                        
                         if (fighters.Where(ff => f.IsElf ? !ff.IsElf : ff.IsElf).Any(ff => LegalFight(f, ff)))
                         {
-
+                            var closeOpponents = fighters.Where(ff => f.IsElf ? !ff.IsElf : ff.IsElf).Where(ff => LegalFight(f, ff)).ToList();
+                            var min = closeOpponents.Min(oo => oo.Health);
+                            closeOpponents = closeOpponents.Where(o => o.Health == min).ToList();
+                            if (closeOpponents.Count() == 1)
+                            {
+                                var opponent = closeOpponents.First();
+                                fighters.First(ff => ff.Id == opponent.Id).Health -= f.Damage;
+                                fighters.RemoveAll(ff => ff.Health <= 0);
+                            }
+                            else
+                            {
+                                closeOpponents.OrderBy(o => o.Y).ThenBy(o => o.X);
+                                var opponent = closeOpponents.First();
+                                fighters.First(ff => ff.Id == opponent.Id).Health -= f.Damage;
+                                fighters.RemoveAll(ff => ff.Health <= 0);
+                            }
                         }
                     }
                 }
+
+                sortedFighters = fighters.OrderBy(f => f.Y).ThenBy(f => f.X).ToList();
             }
 
-            Console.WriteLine("");
+            Console.WriteLine("Final result = " + (rounds * fighters.Sum(f => f.Health)));
         }
 
         private static void SolvePart2()
@@ -96,7 +129,7 @@ namespace Day15
         {
             var opponents = fighters.Where(ff => f.IsElf ? !ff.IsElf : ff.IsElf);
             var closestOpponents = opponents.Select(o => GetDistance(o, cells));
-            return !closestOpponents.Any(c => c != null) ? null : closestOpponents.OrderBy(c => c.Distance).ThenBy(c => c.Y).ThenBy(c => c.X).First();
+            return !closestOpponents.Any(c => c != null) ? null : closestOpponents.Where(c => c != null).OrderBy(c => c.Distance).ThenBy(c => c.Y).ThenBy(c => c.X).First();
         }
 
         private static Cell GetDistance(Fighter f,  IReadOnlyCollection<Cell> cells)
@@ -190,7 +223,15 @@ namespace Day15
         private static bool LegalFight(Fighter f, Fighter ff)
         {
             var moves = new List<(int,int)>{ (0, -1), (-1, 0), (1, 0), (0, 1) };
-            return (from m in moves let x = f.X + m.Item1 let y = f.Y + m.Item2 where x == ff.X && y == ff.Y select x).Any();
+            foreach (var m in moves)
+            {
+                var x = f.X + m.Item1;
+                var y = f.Y + m.Item2;
+                if (x == ff.X && y == ff.Y) return true;
+            }
+
+            return false;
+            //return (from m in moves let x = f.X + m.Item1 let y = f.Y + m.Item2 where x == ff.X && y == ff.Y select x).Any();
         }
     }
 
