@@ -17,14 +17,56 @@ namespace Day15
         {
             var input = File.ReadAllText("Input.txt");
             var data = input.Split('\n').ToList();
-            data = ("#########\n" +
+            /* Example 1 Solution = 27730 */
+            /* data = ("#######\n" +
+                    "#.G...#\n" +
+                    "#...EG#\n" +
+                    "#.#.#G#\n" +
+                    "#..G#E#\n" +
+                    "#.....#\n" +
+                    "#######\n").Split('\n').ToList(); */                  
+            /* Example 2  Solution = 36334 */
+            /* data = ("#######\n" +
+                    "#G..#E#\n" +
+                    "#E#E.E#\n" +
+                    "#G.##.#\n" +
+                    "#...#E#\n" +
+                    "#...E.#\n" +
+                    "#######\n").Split('\n').ToList(); */
+            /* Example 3 Solution = 39514 */
+            /* data = ("#######\n" +
+                    "#E..EG#\n" +
+                    "#.#G.E#\n" +
+                    "#E.##E#\n" +
+                    "#G..#.#\n" +
+                    "#..E#.#\n" +
+                    "#######\n").Split('\n').ToList(); */
+            /* Example 4 Solution = 27755 */
+            /* data = ("#######\n" +
+                    "#E.G#.#\n" +
+                    "#.#G..#\n" +
+                    "#G.#.G#\n" +
+                    "#G..#.#\n" +
+                    "#...E.#\n" +
+                    "#######\n").Split('\n').ToList(); */
+            /* Example 5 Solution = 28944 */
+            /* data = ("#######\n" +
+                    "#.E...#\n" +
+                    "#.#..G#\n" +
+                    "#.###.#\n" +
+                    "#E#G#G#\n" +
+                    "#...#G#\n" +
+                    "#######\n").Split('\n').ToList(); */
+            /* Example 6 Solution = 18740 */
+            /* data = ("#########\n" +
                     "#G......#\n" +
                     "#.E.#...#\n" +
                     "#..##..G#\n" +
                     "#...##..#\n" +
                     "#...#...#\n" +
                     "#.G...G.#\n" +
-                    "#########\n").Split('\n').ToList();
+                    "#.....G.#\n" +
+                    "#########\n").Split('\n').ToList(); */
             var y = 0;
             var id = 0;
             var fighters = new List<Fighter>();
@@ -49,13 +91,18 @@ namespace Day15
                 y++;
             }
             var sortedFighters = fighters.OrderBy(f => f.Y).ThenBy(f => f.X).ToList();
-            var rounds = -1;
+            var rounds = 0;
+            var end = false;
             while (fighters.Any(f => f.IsElf) && fighters.Any(f => !f.IsElf))
             {
-                rounds++;
                 foreach (var f in sortedFighters)
                 {
-                    if(!(fighters.Any(ff => ff.IsElf) && fighters.Any(ff => !ff.IsElf))) break;
+                    if (!fighters.Any(ff => ff.Id == f.Id)) continue;
+                    if (!(fighters.Any(ff => ff.IsElf) && fighters.Any(ff => !ff.IsElf)))
+                    {
+                        end = true;
+                        break;
+                    }
                     if (fighters.Where(ff => f.IsElf ? !ff.IsElf : ff.IsElf).Any(ff => LegalFight(f, ff)))
                     {
                         var closeOpponents = fighters.Where(ff => f.IsElf ? !ff.IsElf : ff.IsElf).Where(ff => LegalFight(f, ff)).ToList();
@@ -106,9 +153,14 @@ namespace Day15
                     }
                 }
 
+                if (end) break;
+                rounds++;
                 sortedFighters = fighters.OrderBy(f => f.Y).ThenBy(f => f.X).ToList();
             }
 
+            // 195339 is too high
+            // 195960 is too high
+            // 193120 is too high
             Console.WriteLine("Final result = " + (rounds * fighters.Sum(f => f.Health)));
         }
 
